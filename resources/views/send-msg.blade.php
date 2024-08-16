@@ -15,6 +15,11 @@
                         </select>
                         
                     </div> 
+                     <div class="mb-3">
+                        <label for="textField" class="form-label">Subject</label>
+                        <input type="text" name="subject" class="form-control" id="textField"
+                            placeholder="Enter text here">
+                    </div>
                     <div class="mb-3">
                         <label for="textField" class="form-label">Mobile Number(s)</label>
                         <input type="text" name="to" class="form-control" id="textField"
