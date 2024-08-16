@@ -9,6 +9,8 @@ use Illuminate\Routing\Controller as BaseController;
 use Symfony\Component\HttpFoundation\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\Mask;
+use App\Models\Transaction;
+use App\Models\TransactionDetail;
 
 class Controller extends BaseController
 {
@@ -27,64 +29,80 @@ class Controller extends BaseController
 
     public function sendSms(Request $request){
         
-       
-
-
+    
         $request->validate([
             'to' => 'required|string',
+            'subject' => 'required|string',
             'message' => 'required|string',
             'mask'=>'required'
         ]);
 
-        $str = $request->to;
+        $string = $request->to;
+        $cleanString = str_replace('', ' ', $string);
+        $numbers = explode(' ', $cleanString);
 
-        $numbers = [];
-        $token = strtok($str, ",");
-        array_push($numbers,$token);
-        while ($token !== false)
-        {
-            
-            $token = strtok(",");
-            array_push($numbers,$token);
-        }
-        
-    
         // Retrieve the SMS configuration from the .env file
         $username = env('SMS_USERNAME');
         $password = env('SMS_PASSWORD');
         $from = env('SMS_FROM');
         $apiUrl = env('SMS_API_URL');
 
+        $successStr = 'Message Sent Successfully!';
+        $failed = 0;
+        $success = 0;
 
-        // Build the API URL with query parameters
-        $url = $apiUrl . '?' . http_build_query([
-            'Username' => $username,
-            'Password' => $password,
-            'From' => $from,
-            'To' => $request->input('to'),
-            'Message' => $request->input('message'),
-        ]);
+        $tran = new Transaction();
+        $tran->subject =  $request->subject;
+        $tran->num_of_contacts  = length($numbers);
+        $tran->num_of_successfull =0;
+        $tran->num_of_failed =0;
+        $tran->save();
 
-        // dd($url);
-        // Send the GET request to the SMS API
-        $response = Http::get($url);
+        foreach ($numbers as $number) {
+            
+            $url = $apiUrl . '?' . http_build_query([
+                'Username' => $username,
+                'Password' => $password,
+                'From' => $from,
+                'To' => $request->$number,
+                'Message' => $request->input('message'),
+            ]);
+            
+            $response = Http::get($url);
+            $tranDetail = New TransactionDetail();
+            $tranDetail->transaction_id = $tran->id;
+            $tranDetail->contact = $number;
+            $tranDetail->response_code = $response;
 
+            if($response==$successStr){
+                $success = $success+1;
+                $tranDetail->sms_status_id = 1;
+            }else{
+                $failed = $failed+1;
+                $tranDetail->sms_status_id = 0;
+            }
+            $tranDetail->save();
 
-
-        dd($response);
-        // Check for a successful response and return accordingly
-        if ($response->successful()) {
+        }
+        $tran->num_of_contacts  = length($numbers);
+        $tran->num_of_successfull = $success;
+        $tran->num_of_failed = $failed;
+        $tran->save();
+       
+        
+        if ($failed>0) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to send SMS.',
+               
+            ]);
+        } else {
             return response()->json([
                 'status' => 'success',
                 'message' => 'SMS sent successfully!',
             ]);
-        } else {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to send SMS.',
-            ], $response->status());
         }
     
-
     }
+
 }
