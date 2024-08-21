@@ -29,6 +29,11 @@ Route::get('/register-page', function () {
     return view('register');
 });
 
+
+Route::get('fetch-transactions', [Controller::class, 'fetchTransactions'])->name('transactions.fetch');
+Route::get('transaction-details/{id}', [Controller::class, 'showDetails'])->name('transaction.details');
+
+
 Route::post('/send-sms',[Controller::class,'sendSms'])->name('sendSms');
 
 

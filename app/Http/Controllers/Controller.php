@@ -22,11 +22,79 @@ class Controller extends BaseController
 
             
         $masks = Mask::where('active',1)->get();
-
         return view('send-msg',compact('masks'));
-
+        
     } 
 
+    public function fetchTransactions(Request $request)
+    {
+        $columns = ['id', 'subject', 'num_of_contacts', 'num_of_successfull', 'num_of_failed', 'created_at'];
+
+        $totalData = Transaction::count();
+        $totalFiltered = $totalData;
+
+        $limit = $request->input('length');
+        $start = $request->input('start');
+        $order = $columns[$request->input('order.0.column')];
+        $dir = $request->input('order.0.dir');
+
+        if (empty($request->input('search.value'))) {
+            $transactions = Transaction::offset($start)
+                ->limit($limit)
+                ->orderBy($order, $dir)
+                ->get();
+        } else {
+            $search = $request->input('search.value');
+
+            $transactions = Transaction::where('subject', 'LIKE', "%{$search}%")
+                ->orWhere('num_of_contacts', 'LIKE', "%{$search}%")
+                ->orWhere('num_of_successfull', 'LIKE', "%{$search}%")
+                ->orWhere('num_of_failed', 'LIKE', "%{$search}%")
+                ->offset($start)
+                ->limit($limit)
+                ->orderBy($order, $dir)
+                ->get();
+
+            $totalFiltered = Transaction::where('subject', 'LIKE', "%{$search}%")
+                ->orWhere('num_of_contacts', 'LIKE', "%{$search}%")
+                ->orWhere('num_of_successfull', 'LIKE', "%{$search}%")
+                ->orWhere('num_of_failed', 'LIKE', "%{$search}%")
+                ->count();
+        }
+        $baseUrl = url('transaction-details');
+
+        $data = [];
+        if (!empty($transactions)) {
+            foreach ($transactions as $transaction) {
+                $nestedData['id'] = $transaction->id;
+                $nestedData['subject'] = $transaction->subject;
+                $nestedData['num_of_contacts'] = $transaction->num_of_contacts;
+                $nestedData['num_of_successfull'] = $transaction->num_of_successfull;
+                $nestedData['num_of_failed'] = $transaction->num_of_failed;
+                $nestedData['created_at'] = date('j M Y h:i a', strtotime($transaction->created_at));
+                $nestedData['details'] = '<a href="' . $baseUrl . '/' . $transaction->id . '" class="btn btn-primary"> Details</a>'; // Generate the HTML link here
+
+                $data[] = $nestedData;
+            }
+        }
+
+        $json_data = [
+            "draw" => intval($request->input('draw')),
+            "recordsTotal" => intval($totalData),
+            "recordsFiltered" => intval($totalFiltered),
+            "data" => $data
+        ];
+
+        return response()->json($json_data);
+    }
+
+    public function showDetails($id)
+    {
+        $transaction = Transaction::findOrFail($id);
+        $details = TransactionDetail::where('transaction_id', $id)->get();
+        
+        return view('transaction-details', compact('transaction', 'details'));
+    }
 
     public function sendSms(Request $request){
         
