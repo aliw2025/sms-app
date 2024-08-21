@@ -17,17 +17,16 @@ use App\Http\Controllers\Controller;
 
 Route::get('/',[Controller::class,'index'])->name('index');
 
-Route::get('/sms', function () {
-    return view('send-msg');
-});
+Route::get('/home',[Controller::class,'index'])->name('home');
+
 
 Route::get('/login-page', function () {
     return view('login');
-});
+})->name('login-page');
 
 Route::get('/register-page', function () {
     return view('register');
-});
+})->name('register-page');
 
 
 Route::get('fetch-transactions', [Controller::class, 'fetchTransactions'])->name('transactions.fetch');
@@ -36,10 +35,7 @@ Route::get('transaction-details/{id}', [Controller::class, 'showDetails'])->name
 
 Route::post('/send-sms',[Controller::class,'sendSms'])->name('sendSms');
 
-
-Route::get('/history', function () {
-    return view('history');
-})->name('history');
+Route::get('/history', [Controller::class, 'history'])->name('history');
 
 
 

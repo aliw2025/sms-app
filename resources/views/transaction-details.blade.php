@@ -23,6 +23,7 @@
                         <th>ID</th>
                         <th>Contact</th>
                         <th>SMS Status</th>
+                        <th>Response Code</th>
                         <th>Date</th>
                     </tr>
                 </thead>
@@ -32,6 +33,7 @@
                         <td>{{ $detail->id }}</td>
                         <td>{{ $detail->contact }}</td>
                         <td>{{ $detail->Smsstatus->description }}</td>
+                        <td>{{ $detail->response_code }}</td>
                         <td>{{ $detail->created_at->format('j M Y h:i a') }}</td>
                     </tr>
                     @endforeach

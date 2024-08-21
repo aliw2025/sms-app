@@ -61,7 +61,7 @@
                         </div>
                     </div>
                 </form>
-               <a class="mt-2" href="register.html">Register</a>
+               <a class="mt-2" href="{{route('register-page')}}">Register</a>
             </div>
            
         </div>

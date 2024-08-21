@@ -17,7 +17,10 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
     public function index(){
 
             
@@ -87,7 +90,10 @@ class Controller extends BaseController
 
         return response()->json($json_data);
     }
+    public function history(){
 
+        return view('history');
+    }
     public function showDetails($id)
     {
         $transaction = Transaction::findOrFail($id);
@@ -143,16 +149,18 @@ class Controller extends BaseController
             curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
             $output=curl_exec($ch);
             
-            if(curl_errno($ch))
-            {
-                echo 'error:' . curl_error($ch);
-            }
+            
             // curl_close($ch);
             // dd('Done');
             $tranDetail = New TransactionDetail();
             $tranDetail->transaction_id = $tran->id;
             $tranDetail->contact = $number;
             $tranDetail->response_code = $output;
+            if(curl_errno($ch))
+            {   
+                $tranDetail->response_code =curl_error($ch);
+               
+            }
 
             if($output==$successStr){
                 $success = $success+1;
