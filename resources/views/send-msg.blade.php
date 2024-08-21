@@ -10,7 +10,7 @@
                         <label for="textField" class="form-label">Mask</label>
                         <select name="mask"  class="form-control" >
                             @foreach ($masks as $mask)
-                                <option value="{{$mask->id}}">{{$mask->mask}}</option>    
+                                <option value="{{$mask->mask}}">{{$mask->mask}}</option>    
                             @endforeach
                         </select>
                         

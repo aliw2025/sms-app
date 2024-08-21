@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\Mask;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
+use App\Enums\SmsStatus;
 
 class Controller extends BaseController
 {
@@ -37,14 +38,16 @@ class Controller extends BaseController
             'mask'=>'required'
         ]);
 
+        // dd($request->all());
         $string = $request->to;
         $cleanString = str_replace('', ' ', $string);
         $numbers = explode(',', $cleanString);
-
+        $mask = $request->mask;
+        $message = $request->message;
+        // dd($mask);
         // Retrieve the SMS configuration from the .env file
         $username = env('SMS_USERNAME');
         $password = env('SMS_PASSWORD');
-        $from = env('SMS_FROM');
         $apiUrl = env('SMS_API_URL');
 
         $successStr = 'Message Sent Successfully!';
@@ -58,16 +61,20 @@ class Controller extends BaseController
         $tran->num_of_failed =0;
         $tran->save();
         
+       
+        
+        
 
         foreach ($numbers as $number) {
             
          
-
+            $url = $apiUrl.'?Username='.$username.'&Password='.$password.'&From='.$mask.'&To='.$number.'&Message='.$message;
+        //    dd($url);
             $ch = curl_init(); 
-            curl_setopt($ch,CURLOPT_URL,'https://connect.jazzcmt.com/sendsms_url.html?Username=03011126475&Password=Jazz%40123&From=PICMTI-HR&To=03499300113&Message=Testing');
+            curl_setopt($ch,CURLOPT_URL,$url);
             curl_setopt($ch,CURLOPT_RETURNTRANSFER,true);
             $output=curl_exec($ch);
-            // dd($output);
+            
             if(curl_errno($ch))
             {
                 echo 'error:' . curl_error($ch);
@@ -81,10 +88,10 @@ class Controller extends BaseController
 
             if($output==$successStr){
                 $success = $success+1;
-                $tranDetail->sms_status_id = 1;
+                $tranDetail->sms_status_id =  2;
             }else{
                 $failed = $failed+1;
-                $tranDetail->sms_status_id = 0;
+                $tranDetail->sms_status_id =  1;
             }
             $tranDetail->save();
 
@@ -93,12 +100,11 @@ class Controller extends BaseController
         $tran->num_of_successfull = $success;
         $tran->num_of_failed = $failed;
         $tran->save();
-       
         
         if ($failed>0) {
             return response()->json([
                 'status' => 'error',
-                'message' => $success.'SMS sent'.$failed.'SMS Failed',
+                'message' => 'sent: '.$success.' Failed: '.$failed,
 
             ]);
         } else {

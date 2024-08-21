@@ -15,7 +15,7 @@ class CreateSmsStatusesTable extends Migration
     {
         Schema::create('sms_statuses', function (Blueprint $table) {
             $table->id();
-            $table->string('desccription');
+            $table->string('description');
             $table->boolean('active');
             $table->timestamps();
         });
